@@ -130,6 +130,18 @@ python export_accounts.py                      # 全部平台
 python export_accounts.py claude chatgpt       # 指定平台
 ```
 
+### 提取 Outlook 的 Graph OAuth refresh_token
+纯 `requests` 模拟 OAuth2 授权码流程（免浏览器），用账号密码换取
+Microsoft Graph 的 `refresh_token`，输出 `email----password----refresh_token----client_id`，
+结果存到 `outlook_accounts/graph_tokens_<时间戳>.txt`。
+```bash
+python extract_graph_tokens.py                                   # 自动扫 unlock_results/，跳过已提取
+python extract_graph_tokens.py outlook_accounts/accounts.txt     # 指定账号文件
+python extract_graph_tokens.py --email a@outlook.com --password xxx
+python extract_graph_tokens.py accounts.txt --concurrency 10     # 并发数(默认 5)
+```
+> 走系统代理（Clash），避免 `account.live.com` 限流；账号文件每行 `email----password----...`。
+
 ### Clash 节点自检
 ```bash
 python -m common.proxy_switch list             # 列出 GLOBAL 组节点
