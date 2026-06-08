@@ -88,6 +88,29 @@ CAPSOLVER_API_KEY = _env("CAPSOLVER_API_KEY", "")
 EZCAPTCHA_API_KEY = _env("EZCAPTCHA_API_KEY", "")
 EZCAPTCHA_API_BASE = _env("EZCAPTCHA_API_BASE", "https://api.ez-captcha.com")
 
+# YesCaptcha 打码平台（解 Arkose FunCaptcha，GitHub 注册用）。API 与 CapSolver 兼容。
+YESCAPTCHA_API_KEY = _env("YESCAPTCHA_API_KEY", "")
+YESCAPTCHA_API_BASE = _env("YESCAPTCHA_API_BASE", "https://api.yescaptcha.com")
+
+# ---------------------------------------------------------------- agent-captcha 视觉投票求解器
+# GitHub Arkose 拼图用多模态大模型「投票」求解（common/agent_captcha.py）。
+# 各家网关 OpenAI 兼容(/v1/chat/completions)；claude/opus 走 Anthropic 原生(/v1/messages)。
+# 主视觉网关（gpt-5.x，图像增强 gpt-image-2 也在此）
+VISION_API_BASE = _env("VISION_API_BASE", "")
+VISION_API_KEY = _env("VISION_API_KEY", "")
+# 图像增强兜底网关（gpt-image-2 images/edits）
+IMAGE_EDIT_BASE2 = _env("IMAGE_EDIT_BASE2", "")
+IMAGE_EDIT_KEY2 = _env("IMAGE_EDIT_KEY2", "")
+# 投票池：中转网关(gemini/gpt) + claude 专用网关。逗号分隔的 key 留空则该模型不参与。
+VOTE_ZZ_BASE = _env("VOTE_ZZ_BASE", "")          # 中转网关(gemini-3.5-flash / gemini-3.1-pro / gpt-5.5)
+VOTE_ZZ_KEY = _env("VOTE_ZZ_KEY", "")            # 上面网关里 gemini 用的 key
+VOTE_GPT_KEY = _env("VOTE_GPT_KEY", "")          # 同网关里 gpt-5.5 用的 key（可与 ZZ_KEY 不同）
+VOTE_OPUS_BASE = _env("VOTE_OPUS_BASE", "")      # claude opus 专用网关（Anthropic /v1/messages）
+VOTE_OPUS_KEY = _env("VOTE_OPUS_KEY", "")
+# gemma 免费兜底文本网关（可选）
+GEMMA_API_BASE = _env("GEMMA_API_BASE", "")
+GEMMA_API_KEY = _env("GEMMA_API_KEY", "")
+
 # ---------------------------------------------------------------- 标准 token 导出/上传
 # 注册成功后落地的标准格式 token 目录（CPA codex / SUB2API content / grok sso）
 TOKEN_OUTPUT_DIR = _env("TOKEN_OUTPUT_DIR", "tokens")

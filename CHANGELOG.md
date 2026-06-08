@@ -1,5 +1,22 @@
 ﻿# 更新日志
 
+## 2026-06-08 — GitHub 注册 + Arkose 验证 agent-captcha 视觉求解
+
+**新增**
+- **`register_github.py`**：GitHub 注册主流程。单页表单（邮箱/密码/用户名/国家，只认 `Create account` 不误点 `Continue with Google`），提交触发 **Arkose FunCaptcha**（octocaptcha 包裹），过验证后浏览器登录 Outlook 取 launch code → 建号 → 存 cookie。`--auto` 跑完整流程，无参数为探索模式（填到验证停、保留窗口）。
+- **`common/agent_captcha.py`**：Arkose 验证**视觉投票求解器**（不依赖传统打码平台）。
+  - **变体自动分派**（按拼图题目文本，不硬编码）：`sequence`（4 图标逐环序列匹配）/ `rotate`（3D 物体朝向匹配）/ `character`（小人踩格，模型分歧大、默认跳过换窗口）。轮数从 "x of N" 解析、候选张数从 `.pip` 进度点数。
+  - **多模型并发投票**：`vote_answer()` 让 gemini-3.5-flash / gpt-5.5 / gemini-3.1-pro / claude-opus 并发判断、多数表决；平票优先级 gemini-flash > gpt-5.5 > gemini-pro > opus（实测 claude 在拼图上偏弱，权重最低）。整轮 deadline 55s 防慢模型拖垮，空票自动重试。
+  - **图像处理**：候选裁剪放大（`shot_element`）+ 拼成带编号网格（`stitch_options_grid`）+ 本地秒级增强 + 控体积 JPEG（`enhance_local`，避免大图传输超时空票）；可选 gpt-image-2 保真增强（`enhance_image`）。
+  - **复盘标注**：每轮落 `screenshots_github/REVIEW_rN.png`，红框=最终选择、彩框=各模型投票，便于人工核对。
+  - **协议自适应**：OpenAI 兼容网关走 `/v1/chat/completions`；claude/opus 走 Anthropic 原生 `/v1/messages`（base 以 `/claude` 结尾自动识别），图片 base64 按 JPEG/PNG 头自适应 media_type。
+- `config.py` 新增 agent-captcha 配置项（全走 `.env`）：`VISION_API_BASE/KEY`、`VISION_MODEL`、`IMAGE_EDIT_BASE2/KEY2`、`VOTE_ZZ_BASE/KEY`、`VOTE_GPT_KEY`、`VOTE_OPUS_BASE/KEY`、`GEMMA_API_BASE/KEY`；`.env.example` 补齐占位与说明。
+
+**说明**
+- Arkose 验证关已实测可通过（sequence 变体 10/10、rotate 5 轮通过）；`character` 变体模型间分歧大，默认遇到即换窗口重试（最多 8 次）赌到易解变体。
+- GitHub 对批量 Outlook 邮箱有风控（验证后提示 "This email can't be used"），整套自动化流程完整，邮源需配可用邮箱。
+- 网关/key 一律走环境变量（`.env`），代码零明文，符合项目约定。
+
 ## 2026-06-07 — chatgpt2api 普通网页号导入
 
 **新增**

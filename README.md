@@ -2,7 +2,7 @@
 
 # 🏭 reg-factory
 
-### Outlook · Gmail · ChatGPT · Grok · Claude · Gemini · Google One 全自动注册/授权机
+### Outlook · Gmail · ChatGPT · Grok · Claude · Gemini · GitHub · Google One 全自动注册/授权机
 
 **自动批量注册 Outlook / Gmail 邮箱 → 平台注册 / 订阅授权 → 导出 cookie 或导入 SUB2API / CPA**
 
@@ -155,6 +155,38 @@ python mailbox_broker.py --port 8765
 python outlook_reg_loop.py                     # 循环
 python outlook_reg_loop.py --count 20          # 注册 20 个后退出
 ```
+
+### GitHub 注册（含 Arkose 验证视觉求解）
+```bash
+python register_github.py --auto                       # 从 _outlook_pool 取邮箱，跑完整流程
+python register_github.py --auto --email a@x.com --password xxx   # 指定邮箱
+python register_github.py                              # 探索模式：填到验证就停、保留窗口
+```
+GitHub 注册页是单页表单（邮箱/密码/用户名/国家），提交后是 **Arkose FunCaptcha**（octocaptcha 包裹）。
+本项目用 **agent-captcha 视觉投票求解器**（`common/agent_captcha.py`）过验证，而非传统打码平台：
+- 进拼图后按题目文本**自动判变体**：`sequence`（4图标逐环序列）/ `rotate`（3D朝向匹配）/ `character`（小人踩格，最难，默认跳过换窗口）。
+- 每轮把候选拼成一张大图、本地秒级增强（PIL，控体积避免传输超时），交 **多个多模态模型并发投票**（gemini-3.5-flash / gpt-5.5 / gemini-3.1-pro / claude-opus，多数表决），driver 据答案点箭头 + Submit。
+- 复盘图落 `screenshots_github/REVIEW_rN.png`（红框=最终选择，彩框=各模型投票）。
+- 网关/key 全走 `.env`（`VISION_*` / `VOTE_*` / `IMAGE_EDIT_*`，见 `.env.example`）。
+
+> 说明：验证关已实测可过；GitHub 对批量 Outlook 邮箱有风控（提示 "This email can't be used"），建议配可用邮源。
+
+**验证出现时的页面**（Create account 后跳 "Verify your account" + octocaptcha）：
+
+<img src="assets/github_captcha/01_verify_screen.jpg" alt="GitHub Arkose 验证出现" width="640" />
+
+**三种拼图变体**（脚本按题目文本自动分派对应解法）：
+
+| sequence（逐环序列） | rotate（3D 朝向） |
+|---|---|
+| <img src="assets/github_captcha/02_variant_sequence.jpg" alt="sequence 变体" width="340" /> | <img src="assets/github_captcha/03_variant_rotate.jpg" alt="rotate 变体" width="340" /> |
+| **character（小人踩格，最难）** | **wires（连线对图标）** |
+| <img src="assets/github_captcha/04_variant_character.jpg" alt="character 变体" width="340" /> | <img src="assets/github_captcha/06_variant_wires.jpg" alt="wires 变体" width="340" /> |
+
+**复盘图**（每轮落 `screenshots_github/REVIEW_rN.png`）：候选拼成带编号网格，**粗红框 = 最终投票选择**，**彩色细框 = 各模型各自的投票**，底部黄字列出「模型:答案」，方便人工核对是谁选对/选错：
+
+<img src="assets/github_captcha/05_review_vote.jpg" alt="多模型投票复盘图" width="420" />
+
 
 ### 导出已注册账号 cookie（供直登扩展使用）
 ```bash
@@ -409,6 +441,7 @@ python export_chatgpt2api.py --json                                # 导出 {acc
 | `run_full_flow.py` | 端到端编排：注册邮箱 → 三平台注册 |
 | `register_three_platforms.py` | 三平台（Claude/ChatGPT/Grok）注册编排 |
 | `register.py` / `register_chatgpt.py` / `register_grok.py` | 各平台注册主流程 |
+| `register_github.py` | GitHub 注册主流程（单页表单 + Arkose 验证视觉求解 + 邮件 launch code） |
 | `outlook_reg_loop.py` / `register_outlook_standalone.py` | Outlook 自注册养号 |
 | `unlock_outlook.py` / `extract_graph_tokens.py` | Outlook 解锁 / 提取 Graph refresh_token |
 | `activate_plus.py` | baxigpt 激活码开通 Plus / Codex 订阅 |
@@ -431,6 +464,7 @@ python export_chatgpt2api.py --json                                # 导出 {acc
 | `session_export.py` | 登录态导出成 CPA / SUB2API 标准 token（对齐 FlowPilot） |
 | `uploaders.py` | 上传到 CPA / SUB2API / webchat2api |
 | `proxy_switch.py` | Clash 节点切换 |
+| `agent_captcha.py` | Arkose 验证视觉投票求解器：变体分派 + 多模型并发投票 + 图片增强/拼接 + 复盘标注 |
 
 **协作约定**
 
